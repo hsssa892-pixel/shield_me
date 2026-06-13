@@ -43,6 +43,10 @@
                 </div>
                 <div class="input-area">
                     <div id="loader" class="loader"></div>
+                    
+                    <input type="file" id="file-input" style="display: none;" onchange="updateFileName()">
+                    <label for="file-input" class="attach-btn" id="attach-label">📎</label>
+                    
                     <input type="text" id="user-input" placeholder="اكتب سؤالك أو ضع رابطاً هنا...">
                     <button id="send-btn" onclick="sendMessage()">إرسال</button>
                 </div>
