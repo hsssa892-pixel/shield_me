@@ -173,6 +173,32 @@ body {
     cursor: pointer;
     font-weight: bold;
 }
+/* attack button */
+.attach-btn {
+    font-size: 1.5rem;
+    cursor: pointer;
+    padding: 0 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: transform 0.2s ease, color 0.2s ease;
+}
+
+.attach-btn:hover {
+    transform: scale(1.1);
+    color: #00e5ff; 
+    /* The blue glowing box effect */
+    background-color: rgba(0, 229, 255, 0.1); /* Light transparent blue background */
+    box-shadow: 0 0 10px #00e5ff, 0 0 20px rgba(0, 229, 255, 0.5); /* Outer neon glow */
+    border-radius: 8px; /* Smooth, rounded corners for the box */
+}
+
+/* Make sure the input area groups everything nicely */
+.input-area {
+    display: flex;
+    align-items: center;
+    gap: 10px; 
+}
 
 /* الـ Loader */
 .loader {

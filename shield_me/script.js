@@ -4,51 +4,88 @@ function showPage(pageId) {
     pages.forEach(page => page.classList.remove('active'));
     document.getElementById(pageId).classList.add('active');
 }
+function updateFileName() {
+    const fileInput = document.getElementById('file-input');
+    const attachLabel = document.getElementById('attach-label');
+    
+    // Check how many files are selected
+    if (fileInput.files.length > 0) {
+        // Show a folder icon and the number of files attached
+        attachLabel.innerText = `📁 (${fileInput.files.length})`; 
+        attachLabel.style.color = "#00e5ff"; 
+    } else {
+        attachLabel.innerText = "📎";
+        attachLabel.style.color = "inherit";
+    }
+}
 async function sendMessage() {
     const input = document.getElementById('user-input');
+    const fileInput = document.getElementById('file-input');
     const btn = document.getElementById('send-btn');
     const loader = document.getElementById('loader');
     const chatBox = document.getElementById('chat-box');
 
     const message = input.value.trim();
-    if (!message) return;
+    const files = fileInput.files; // Grab the whole list of files
+    
+    if (!message && files.length === 0) return;
 
-    // تعطيل الإدخال وإظهار التحميل
-    input.disabled = true;
-    btn.disabled = true;
-    loader.style.display = "block";
-
-    // إضافة رسالة المستخدم
-    chatBox.innerHTML += `<div class="user-msg">${message}</div>`;
-    input.value = "";
-    chatBox.scrollTop = chatBox.scrollHeight;
-
-    try {
-        // --- الربط مع الـ AI ---
-        // هنا هنبعت الرسالة للـ API اللي زميلك هيعمله (مثلاً Flask أو FastAPI)
-        const response = await fetch('URL_الـ_API_بتاع_زميلك', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ "text": message })
-        });
-
-        const data = await response.json();
-
-        // عرض الرد الحقيقي من الـ AI
-        // لو الـ AI باعت نتيجة تحليل لينك، ممكن نظهرها بشكل مميز
-        const aiResponse = data.result || "عذراً، لم أستطع تحليل هذا الطلب.";
-        chatBox.innerHTML += `<div class="ai-msg">${aiResponse}</div>`;
-
-    } catch (error) {
-        console.error("Error:", error);
-        chatBox.innerHTML += `<div class="ai-msg" style="color: #ff4b2b;">فشل الاتصال بخادم الأمان. تأكد من تشغيل الـ AI Model.</div>`;
+    if (message) {
+        chatBox.innerHTML += `<div class="message user-message">👤 ${message}</div>`;
+    }
+    
+    // If files are attached, list all their names in the user message bubble
+    if (files.length > 0) {
+        let fileNames = [];
+        for (let i = 0; i < files.length; i++) {
+            fileNames.push(files[i].name);
+        }
+        chatBox.innerHTML += `<div class="message user-message">📁 فحص الملفات: <strong>${fileNames.join(', ')}</strong></div>`;
     }
 
-    // إعادة التفعيل
-    input.disabled = false;
-    btn.disabled = false;
-    loader.style.display = "none";
     chatBox.scrollTop = chatBox.scrollHeight;
+
+    input.disabled = true;
+    btn.disabled = true;
+    fileInput.disabled = true;
+    loader.style.display = "block";
+    input.value = '';
+
+    const formData = new FormData();
+    if (message) formData.append('text', message);
+    
+    // Loop through the files and append EACH ONE to the formData
+    for (let i = 0; i < files.length; i++) {
+        formData.append('file', files[i]);
+    }
+
+    try {
+        const response = await fetch('http://127.0.0.1:5000/scan', {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) throw new Error(`Server status ${response.status}`);
+        const data = await response.json();
+
+        if (data.reply) {
+            chatBox.innerHTML += `<div class="message bot-message">🤖 ${data.reply}</div>`;
+        } else {
+            chatBox.innerHTML += `<div class="message bot-message">🤖 استلمت طلبك ولكن الرد فارغ.</div>`;
+        }
+
+    } catch (error) {
+        console.error("🚨 Connection Error:", error);
+        chatBox.innerHTML += `<div class="message bot-message" style="color: #ff4b2b;">❌ فشل الاتصال بخادم الأمان.</div>`;
+    } finally {
+        input.disabled = false;
+        btn.disabled = false;
+        fileInput.disabled = false;
+        loader.style.display = "none";
+        fileInput.value = ''; 
+        updateFileName(); // Reset the clip icon
+        chatBox.scrollTop = chatBox.scrollHeight;
+    }
 }
 
 // 1. قاعدة بيانات الأسئلة (20 سؤال)
